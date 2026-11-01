@@ -1,0 +1,53 @@
+name: Prime Cut Studios — CI checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'prime-cut-studios/**'
+      - '.github/workflows/primecuts-ci.yml'
+  pull_request:
+    paths:
+      - 'prime-cut-studios/**'
+      - '.github/workflows/primecuts-ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: primecuts-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Types, build and security regressions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: prime-cut-studios
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24.22.1'
+          cache: npm
+          cache-dependency-path: prime-cut-studios/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Check TypeScript
+        run: npm run typecheck
+      - name: Build production bundle
+        run: npm run build
+      - name: Regression and authorization checks
+        run: |
+          npm run test:rest:responses
+          npm run test:workspace:db
+          npm run test:workspace:routes
+          npm run test:project-book:db
+          npm run test:project-book:routes
+          npm run test:communications:db
+          npm run test:communications:routes
+          npm run check:portal
