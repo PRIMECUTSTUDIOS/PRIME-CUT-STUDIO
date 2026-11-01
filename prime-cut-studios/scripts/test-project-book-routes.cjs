@@ -2,8 +2,9 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript'),vm=require('node:vm'),{randomUUID}=require('node:crypto');
 const root=path.resolve(__dirname,'..'),project=randomUUID(),blockId=randomUUID();let staff=null,client=null,membership=false,reviewer=false,visible=true,writes=[],downloads=0;let policies; 
 const mocks={
+ 'server-only':{}, // Next.js compile-only guard; mock for isolated route tests
  '@/lib/email':{scheduleMail:()=>{},enqueueEmail:async()=>{}},
- '@/lib/communications-db':{commEnabled:()=>false,allowAction:async()=>true},
+ '@/lib/communications-db':{commEnabled:()=>false,allowAction:async()=>true,filters:()=>({}),comm:async()=>[],rpc:async()=>null},
  'next/server':{NextResponse:{redirect:(url,status)=>new Response(null,{status,headers:{location:String(url)}})}},
  'next/headers':{cookies:async()=>({get:()=>undefined,set:()=>{}})},
  '@/lib/operations-db':{operationsSession:async()=>staff,requireCapability:async(ability,id)=>staff&&policies.scopeCan({role:staff.role,active:true,assignedProjectIds:staff.projectId?[staff.projectId]:[]},ability,id)?staff:null,audit:async()=>{}},
