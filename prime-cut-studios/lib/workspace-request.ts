@@ -8,7 +8,10 @@ export async function workspaceForm(request:Request,maxBytes=24000){
  if(!type.startsWith('application/x-www-form-urlencoded'))return new Response('Use the provided form',{status:415});
  const reader=request.body?.getReader();if(!reader)return new Response('Empty request',{status:400});
  const chunks:Uint8Array[]=[];let total=0;
+ try{
  while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;if(total>maxBytes){await reader.cancel();return new Response('Request too large',{status:413});}chunks.push(value);}
+ }catch{return new Response('Malformed form',{status:400});}
+ finally{reader.releaseLock();}
  const bytes=new Uint8Array(total);let offset=0;for(const part of chunks){bytes.set(part,offset);offset+=part.length;}
  return new URLSearchParams(new TextDecoder().decode(bytes));
 }
