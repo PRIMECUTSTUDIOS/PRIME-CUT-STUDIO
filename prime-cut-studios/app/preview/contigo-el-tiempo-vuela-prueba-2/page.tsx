@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
-const driveId = '1uSUJ2RPBJlOWk_11_LpN10SKfGRZr61P';
+const driveId = '1nO1k969s1eNNLFPnP6shtxZGC3OKzT5O';
 const viewUrl = 'https://drive.google.com/file/d/' + driveId + '/view';
 
 export default function TonyPreviewPage() {
