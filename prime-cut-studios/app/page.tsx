@@ -1,7 +1,7 @@
 import {HomeSales} from '@/components/HomeSales';
 import {getPricingCatalog} from '@/lib/pricing-db';
 import {publicMetadata} from '@/lib/public-metadata';
-export const metadata=publicMetadata("Photography & Film in Central Texas","Photography, music videos, branded films and event coverage in Killeen and Central Texas. Explore real work and request your production quote.","/");
+export const metadata=publicMetadata("Killeen Photographer & Videographer","Photography, music videos, branded films and event coverage in Killeen and Central Texas. Explore real work and request your production quote.","/");
 import {CinematicHero} from '@/components/CinematicHero';
 import Link from 'next/link';
 import {ArrowUpRight,Clapperboard,Camera,Film,CheckCircle2} from 'lucide-react';

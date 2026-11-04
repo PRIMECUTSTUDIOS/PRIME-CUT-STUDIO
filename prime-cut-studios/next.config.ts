@@ -10,6 +10,9 @@ const nextConfig:NextConfig={
       {key:'Referrer-Policy',value:'no-referrer'},
       {key:'Permissions-Policy',value:'camera=(), microphone=(), geolocation=()'}
     ]},
+    ...['admin','client','account','notifications','team','talent','preview','newsletter/manage','data'].map(path=>({
+      source:'/'+path+'/:path*',headers:[{key:'X-Robots-Tag',value:'noindex, nofollow'}]
+    })),
     {source:'/admin/:path*',headers:[{key:'Cache-Control',value:'private, no-store, max-age=0'}]},
     {source:'/client/:path*',headers:[{key:'Cache-Control',value:'private, no-store, max-age=0'}]},
     {source:'/team/:path*',headers:[{key:'Cache-Control',value:'private, no-store, max-age=0'},{key:'X-Robots-Tag',value:'noindex, nofollow'}]},
