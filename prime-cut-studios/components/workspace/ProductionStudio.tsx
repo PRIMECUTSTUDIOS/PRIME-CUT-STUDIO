@@ -6,6 +6,7 @@ import {BookEditor} from '@/components/workspace/BookEditor';
 import {BookUpload} from '@/components/workspace/BookUpload';
 import {WorkspaceForm} from '@/components/workspace/WorkspaceForm';
 import {ProductionToolkit} from '@/components/workspace/ProductionToolkit';
+import {ProductionPhotoGallery} from '@/components/workspace/DrivePhotoReference';
 import type {ToolKind} from '@/lib/project-book-policy';
 
 type Group='brief'|'script'|'shots'|'storyboard'|'wardrobe'|'palette'|'locations'|'cast'|'schedule'|'callsheets'|'budget'|'notes'|'files';
@@ -84,6 +85,7 @@ export function ProductionStudio({projectId,title,status,canEdit,canInvite,initi
  </form>
  <p className="small muted">La invitación se genera en esta web. Después podrás copiar el enlace desde la sección Staff.</p></div>}
  <ProductionToolkit projectId={projectId} blocks={initialBlocks} canEdit={canEdit} newIds={newToolIds}/>
+ <ProductionPhotoGallery blocks={initialBlocks}/>
  <div className="cards4" style={{margin:'22px 0'}}>
   <div className="dashmetric"><span>Escenas del shotlist</span><b>{initialBlocks.reduce((count,b)=>count+(b.metadata?.shots?.length||0),0)}</b></div>
   <div className="dashmetric"><span>Secciones editables</span><b>{initialBlocks.length}</b></div>
