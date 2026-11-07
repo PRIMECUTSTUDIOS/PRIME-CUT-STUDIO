@@ -5,21 +5,35 @@ import type {BookBlock,BookResponse} from '@/lib/project-book-db';
 import {BookEditor} from '@/components/workspace/BookEditor';
 import {BookUpload} from '@/components/workspace/BookUpload';
 import {WorkspaceForm} from '@/components/workspace/WorkspaceForm';
+import {ProductionToolkit} from '@/components/workspace/ProductionToolkit';
+import type {ToolKind} from '@/lib/project-book-policy';
 
-type Group='shots'|'storyboard'|'wardrobe'|'palette'|'locations'|'cast'|'schedule'|'notes'|'files';
+type Group='brief'|'script'|'shots'|'storyboard'|'wardrobe'|'palette'|'locations'|'cast'|'schedule'|'callsheets'|'budget'|'notes'|'files';
 const menu:{key:Group;label:string;desc:string}[]=[
- {key:'shots',label:'Shotlist · escenas',desc:'Edita cada toma con su tiempo, lente, movimiento y continuidad.'},
- {key:'storyboard',label:'Storyboard',desc:'Edita la narrativa visual y sube los frames para cada escena.'},
+ {key:'brief',label:'Concepto y brief',desc:'Resumen, propuesta creativa, objetivos y estilo del proyecto.'},
+ {key:'script',label:'Guion',desc:'Libreto, escenas, diálogos, estructura y versiones.'},
+ {key:'shots',label:'Shot list',desc:'Planos, lentes, movimientos, tiempo y continuidad.'},
+ {key:'storyboard',label:'Storyboard',desc:'Frames, orden visual e imágenes de referencia.'},
  {key:'wardrobe',label:'Vestuario y arte',desc:'Looks, utilería, accesorios y decisiones de arte.'},
- {key:'palette',label:'Paleta de colores',desc:'Actualiza los colores y su uso en la fotografía.'},
- {key:'locations',label:'Locaciones',desc:'Fotos de la casa, permisos, accesos y notas del scouting.'},
- {key:'cast',label:'Talento y crew',desc:'Actores, extras, vestuario y equipo de producción.'},
- {key:'schedule',label:'Plan de rodaje',desc:'Horarios, llamados, logística y entregables.'},
- {key:'notes',label:'Notas y aprobaciones',desc:'Cambios, decisiones del equipo y estado de aprobación.'},
- {key:'files',label:'Archivos y referencias',desc:'Sube fotos, bocetos, documentos y referencias desde aquí.'}
+ {key:'palette',label:'Paleta de colores',desc:'Colores, tratamiento visual y fotografía.'},
+ {key:'locations',label:'Locaciones',desc:'Scouting, accesos, permisos, fotografías y seguridad.'},
+ {key:'cast',label:'Casting y crew',desc:'Talento, personajes, responsables y equipo.'},
+ {key:'schedule',label:'Plan de rodaje',desc:'Secuencia, horarios, logística y entregables.'},
+ {key:'callsheets',label:'Call sheets',desc:'Llamados diarios, direcciones y coordinación de rodaje.'},
+ {key:'budget',label:'Presupuesto',desc:'Partidas de producción y pagos.'},
+ {key:'notes',label:'Notas y aprobaciones',desc:'Revisiones de video, decisiones y comentarios.'},
+ {key:'files',label:'Archivos y referencias',desc:'Documentos, fotos y referencias subidas en la web.'}
 ];
 const classify=(b:BookBlock):Group=>{
- if(b.kind==='shot_list')return 'shots';
+ if(b.metadata?.tool==='shots'||b.kind==='shot_list')return 'shots';
+ if(b.metadata?.tool==='storyboard')return 'storyboard';
+ if(b.metadata?.tool==='crew')return 'cast';
+ if(b.metadata?.tool==='schedule')return 'schedule';
+ if(b.metadata?.tool==='call_sheet')return 'callsheets';
+ if(b.metadata?.tool==='budget')return 'budget';
+ if(b.metadata?.tool==='review')return 'notes';
+ if(b.kind==='script')return 'script';
+ if(b.kind==='brief')return 'brief';
  if(b.kind==='palette')return 'palette';
  if(b.kind==='location')return 'locations';
  if(b.kind==='cast')return 'cast';
@@ -28,11 +42,13 @@ const classify=(b:BookBlock):Group=>{
  const title=b.title.toLowerCase();
  if(title.includes('storyboard'))return 'storyboard';
  if(title.includes('vestuario')||title.includes('utilería'))return 'wardrobe';
- if(title.includes('notas')||title.includes('aprobacion'))return 'notes';
- return 'storyboard';
+ if(title.includes('presupuesto'))return 'budget';
+ if(title.includes('call sheet'))return 'callsheets';
+ if(title.includes('aprobacion')||title.includes('revisi')||title.includes('notas'))return 'notes';
+ return 'brief';
 };
 function sceneTime(b:BookBlock){const match=b.body.match(/\b\d{2}:\d{2}[–-]\d{2}:\d{2}\b/);return match?match[0]:'';}
-export function ProductionStudio({projectId,title,status,canEdit,canInvite,initialBlocks,initialResponses,flash,newBlockId}:{projectId:string,title:string,status:string,canEdit:boolean,canInvite:boolean,initialBlocks:BookBlock[],initialResponses:BookResponse[],flash:boolean,newBlockId:string}){
+export function ProductionStudio({projectId,title,status,canEdit,canInvite,initialBlocks,initialResponses,flash,newBlockId,newToolIds}:{projectId:string,title:string,status:string,canEdit:boolean,canInvite:boolean,initialBlocks:BookBlock[],initialResponses:BookResponse[],flash:boolean,newBlockId:string,newToolIds:Record<ToolKind,string>}){
  const [tab,setTab]=useState<Group>('shots');
  const [selected,setSelected]=useState(initialBlocks.find(b=>b.kind==='shot_list')?.id||initialBlocks[0]?.id||'');
  const [adding,setAdding]=useState(false);
@@ -49,7 +65,7 @@ export function ProductionStudio({projectId,title,status,canEdit,canInvite,initi
  <header className="panel" style={{padding:'25px 28px',borderColor:'#a47938',background:'linear-gradient(115deg,#24201a,#14191e)'}}>
   <p className="eyebrow" style={{color:'#eac07d'}}>PRIME CUT STUDIOS · SALA DE PREPRODUCCIÓN ONLINE</p>
   <h1 style={{margin:'8px 0',fontSize:'clamp(26px,4vw,43px)'}}>{title}</h1>
-  <p className="muted" style={{marginBottom:15}}>Good Demon · {status==='planning'?'Grabación aprobada · planificación activa':status} · Los cambios se guardan en el proyecto y los ve el equipo autorizado.</p>
+  <p className="muted" style={{marginBottom:15}}>{status==='planning'?'Grabación aprobada · planificación activa':status} · Los cambios se guardan en el proyecto y los ve el equipo autorizado.</p>
   <div style={{display:'flex',flexWrap:'wrap',gap:10,alignItems:'center'}}>
    {canInvite&&<button type="button" className="btn" onClick={()=>setShowInvite(v=>!v)}>{showInvite?'Cerrar invitaciones':'+ Invitar personas a editar'}</button>}
    <Link className="btn secondary" href={'/team/projects/'+projectId+'?tab=details'}>Timeline y tareas</Link>
@@ -67,8 +83,9 @@ export function ProductionStudio({projectId,title,status,canEdit,canInvite,initi
   <button className="btn" type="submit">Generar invitación privada</button>
  </form>
  <p className="small muted">La invitación se genera en esta web. Después podrás copiar el enlace desde la sección Staff.</p></div>}
+ <ProductionToolkit projectId={projectId} blocks={initialBlocks} canEdit={canEdit} newIds={newToolIds}/>
  <div className="cards4" style={{margin:'22px 0'}}>
-  <div className="dashmetric"><span>Escenas del shotlist</span><b>{groups.find(g=>g.key==='shots')?.blocks.length||0}</b></div>
+  <div className="dashmetric"><span>Escenas del shotlist</span><b>{initialBlocks.reduce((count,b)=>count+(b.metadata?.shots?.length||0),0)}</b></div>
   <div className="dashmetric"><span>Secciones editables</span><b>{initialBlocks.length}</b></div>
   <div className="dashmetric"><span>Imágenes en proyecto</span><b>{allImages.length}</b></div>
   <div className="dashmetric"><span>Notas registradas</span><b>{initialResponses.filter(x=>x.kind==='comment').length}</b></div>
