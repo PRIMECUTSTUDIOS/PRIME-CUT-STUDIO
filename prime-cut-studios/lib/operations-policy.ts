@@ -14,7 +14,7 @@ const grants:Record<StaffRole,readonly Capability[]>={
  secretary:['crm.read','crm.write','projects.read','projects.write','projects.create','casting.read','production.read','production.write','contracts.read','tasks.read','tasks.write'],
  producer:['crm.read','projects.read','projects.write','projects.create','finance.read','casting.read','casting.write','casting.review','production.read','production.write','assets.read','assets.write','assets.publish','contracts.read','contracts.write','inventory.read','inventory.write','tasks.read','tasks.write'],
  casting_manager:['projects.read','casting.read','casting.write','casting.review','production.read','assets.read','tasks.read','tasks.write'],
- editor:['projects.read','production.read','assets.read','assets.write','tasks.read','tasks.write'],
+ editor:['projects.read','projects.write','production.read','production.write','assets.read','assets.write','tasks.read','tasks.write'],
  photographer:['projects.read','production.read','assets.read','assets.write','inventory.read','tasks.read','tasks.write'],
  crew:['projects.read','production.read','inventory.read','tasks.read','tasks.write'],
  finance:['crm.read','projects.read','finance.read','finance.write','contracts.read','tasks.read','tasks.write']
