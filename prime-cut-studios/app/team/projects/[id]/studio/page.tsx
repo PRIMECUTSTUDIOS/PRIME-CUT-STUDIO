@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {randomUUID} from 'node:crypto';
 import {redirect,notFound} from 'next/navigation';
 import {adminAuthenticated} from '@/lib/auth';
 import {getProject} from '@/lib/db';
@@ -21,6 +22,6 @@ export default async function Studio({params,searchParams}:{params:Promise<{id:s
  const notes=await bookResponses(id,blocks.map(b=>b.id));
  return <main className="shell" style={{maxWidth:1440,paddingTop:26,paddingBottom:70}}>
   <p style={{marginBottom:15}}><Link className="inline-link" href={'/team/projects/'+id+'?tab=production'}>← Vista general del proyecto</Link></p>
-  <ProductionStudio projectId={id} title={project.title} status={project.status} canEdit={canEdit} canInvite={await adminAuthenticated()} initialBlocks={blocks} initialResponses={notes} flash={!!flash.saved||!!flash.uploaded}/>
+  <ProductionStudio projectId={id} title={project.title} status={project.status} canEdit={canEdit} canInvite={await adminAuthenticated()} initialBlocks={blocks} initialResponses={notes} flash={!!flash.saved||!!flash.uploaded} newBlockId={randomUUID()}/>
  </main>;
 }
