@@ -1,4 +1,5 @@
 import type {BookBlock} from '@/lib/project-book-db';
+import {DrivePhotoReference} from '@/components/workspace/DrivePhotoReference';
 const shell={margin:'14px 0',display:'grid',gap:12} as const;
 const card={border:'1px solid #5e5549',borderRadius:10,padding:14,minWidth:0} as const;
 const grid={display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,220px),1fr))',gap:12} as const;
@@ -9,7 +10,7 @@ export function ProductionBlockPreview({block,staff=false}:{block:BookBlock;staf
  if(m.tool==='storyboard')return <div style={grid} aria-label="Storyboard del proyecto">
   {(m.frames||[]).map((f,i)=><article key={i} style={card}>
    <p className="eyebrow">FRAME {String(i+1).padStart(2,'0')} · {f.scene||'Escena por definir'}</p>
-   {f.imageBlockId&&/^[a-f\d-]{36}$/i.test(f.imageBlockId)&&<img src={'/api/project-documents/'+f.imageBlockId} alt={'Storyboard '+(f.shot||String(i+1))} style={{width:'100%',height:185,objectFit:'contain',background:'#17191a',borderRadius:8}} loading="lazy"/>}
+   {f.imageUrl?<DrivePhotoReference url={f.imageUrl} title={'Storyboard '+(f.shot||String(i+1))} height={195}/>:f.imageBlockId&&/^[a-f\d-]{36}$/i.test(f.imageBlockId)&&<img src={'/api/project-documents/'+f.imageBlockId} alt={'Storyboard '+(f.shot||String(i+1))} style={{width:'100%',height:185,objectFit:'contain',background:'#17191a',borderRadius:8}} loading="lazy"/>}
    <h4>{f.shot||'Plano pendiente'}</h4>
    <p style={{whiteSpace:'pre-wrap'}}>{f.description}</p>
    {f.duration&&<p className="small muted">Duración: {f.duration} s</p>}
