@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {ProductionBlockPreview} from '@/components/workspace/ProductionBlockPreview';
 import type {ClientFinance} from '@/lib/project-finance';
 import {ClientFinanceSummary} from './ProjectFinance';
 import {TalentCards,type ProfessionalTalent} from '@/components/workspace/TalentCards';
@@ -22,7 +23,8 @@ function Block({block:b,responses,canReview,compact=false,locationChoices=[]}:{b
  const replies=responses.filter(r=>r.block_id===b.id);
  const [summary,...rest]=b.body.split('\n\n');
  const content=<>
-  {!!b.metadata.shots?.length&&<div className={styles.shots}>{b.metadata.shots.map((shot,i)=><article className={styles.shot} key={i}><span className={styles.eyebrow}>Toma {String(i+1).padStart(2,'0')} · {shot.scene}</span><h4>{shot.framing||'Encuadre por definir'}</h4><p>{shot.action}</p><dl><div><dt>Cámara</dt><dd>{shot.movement||'Por definir'}</dd></div><div><dt>Producción</dt><dd>{shot.notes||'Por confirmar'}</dd></div></dl></article>)}</div>}
+  <ProductionBlockPreview block={b}/>
+  {!!b.metadata.shots?.length&&b.metadata.tool!=='shots'&&<div className={styles.shots}>{b.metadata.shots.map((shot,i)=><article className={styles.shot} key={i}><span className={styles.eyebrow}>Toma {String(i+1).padStart(2,'0')} · {shot.scene}</span><h4>{shot.framing||'Encuadre por definir'}</h4><p>{shot.action}</p><dl><div><dt>Cámara</dt><dd>{shot.movement||'Por definir'}</dd></div><div><dt>Producción</dt><dd>{shot.notes||'Por confirmar'}</dd></div></dl></article>)}</div>}
   {b.storage_path&&b.file_mime?.startsWith('image/')&&<a href={'/api/project-documents/'+b.id} target="_blank" rel="noopener noreferrer"><img className={styles.referenceImage} src={'/api/project-documents/'+b.id} alt={b.title} loading="lazy"/></a>}
   {!!b.metadata.colors.length&&<Palette block={b}/>}
   {compact?<><p>{summary}</p><details className={styles.disclosure}><summary>Ver detalles y referencias</summary><div className={styles.body}>{rest.join('\n\n')}</div><References block={b}/></details></>:<><div className={styles.body}>{b.body}</div><References block={b}/></>}
