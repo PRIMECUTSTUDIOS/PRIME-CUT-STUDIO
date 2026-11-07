@@ -61,9 +61,9 @@ export function identifyIp(ip: string) {
   return createHash('sha256').update(salt+':'+ip).digest('hex');
 }
 
-export async function listInquiries():Promise<Inquiry[]> {return getRows('pc_inquiries',{select:'id,name,email,phone,service,event_date,location,budget,details,status,created_at,request_snapshot',order:'created_at.desc',limit:'200'});}
-export async function listProjects():Promise<Project[]> {return getRows('pc_projects',{select:'id,inquiry_id,client_name,client_email,title,status,event_date,location,quote_amount_cents,quote_notes,portal_expires_at,created_at,updated_at',order:'updated_at.desc',limit:'200'});}
-export async function getProject(id:string):Promise<Project|undefined>{const x=await getRows<Project>('pc_projects',{id:`eq.${id}`,select:'*',limit:'1'});return x[0];}
+export async function listInquiries():Promise<Inquiry[]> {return getRows('pc_inquiries',{deleted_at:'is.null',is_spam:'eq.false',select:'id,name,email,phone,service,event_date,location,budget,details,status,created_at,request_snapshot',order:'created_at.desc',limit:'200'});}
+export async function listProjects():Promise<Project[]> {return getRows('pc_projects',{deleted_at:'is.null',select:'id,inquiry_id,client_name,client_email,title,status,event_date,location,quote_amount_cents,quote_notes,portal_expires_at,created_at,updated_at',order:'updated_at.desc',limit:'200'});}
+export async function getProject(id:string):Promise<Project|undefined>{const x=await getRows<Project>('pc_projects',{id:`eq.${id}`,deleted_at:'is.null',select:'*',limit:'1'});return x[0];}
 export async function listDeliverables(id:string,client=false):Promise<Deliverable[]> {return getRows('pc_deliverables',{project_id:`eq.${id}`,...(client?{visible:'eq.true'}:{}),select:'*',order:'created_at.desc'});}
 
 export async function createInquiry(data: Omit<Inquiry,'id'|'status'|'created_at'> & {request_id?:string;request_snapshot?:InquirySnapshot}, ipHash:string){
@@ -93,7 +93,7 @@ export async function convertInquiry(id:string){
 }
 export async function getClientProject(token:string):Promise<Project|undefined>{
   if(!/^[A-Za-z0-9_-]{40,100}$/.test(token))return undefined;
-  const x=await getRows<Project>('pc_projects',{portal_token_hash:`eq.${hashToken(token)}`,portal_expires_at:`gt.${new Date().toISOString()}`,select:'id,inquiry_id,client_name,client_email,title,status,event_date,location,quote_amount_cents,quote_notes,portal_expires_at,created_at,updated_at',limit:'1'});
+  const x=await getRows<Project>('pc_projects',{portal_token_hash:`eq.${hashToken(token)}`,deleted_at:'is.null',portal_expires_at:`gt.${new Date().toISOString()}`,select:'id,inquiry_id,client_name,client_email,title,status,event_date,location,quote_amount_cents,quote_notes,portal_expires_at,created_at,updated_at',limit:'1'});
   return x[0];
 }
 export async function regeneratePortalToken(id:string):Promise<string|null>{
