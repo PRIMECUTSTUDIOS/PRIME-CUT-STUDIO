@@ -1,8 +1,21 @@
-/* Exact allowlist of private reference photographs from the existing Tony dossier. */
+/* Exact allowlist of reference photos accessible through authenticated project-document routes only. */
 export const bundledReferences:Record<string,string>={
   "39ca156f-0de5-4de5-a22a-4c9480227bf7/21230a7b-7c98-53b1-ac11-809c9561d313.jpg": "21230a7b-7c98-53b1-ac11-809c9561d313.jpg",
   "39ca156f-0de5-4de5-a22a-4c9480227bf7/535da7f7-8306-5e56-9496-2c680ab25d85.jpg": "535da7f7-8306-5e56-9496-2c680ab25d85.jpg",
   "39ca156f-0de5-4de5-a22a-4c9480227bf7/67dc2f75-5364-51c7-9250-21c23bcf711a.jpg": "67dc2f75-5364-51c7-9250-21c23bcf711a.jpg",
   "39ca156f-0de5-4de5-a22a-4c9480227bf7/35352cb5-19e6-53d7-a1e2-38014b1f29b7.jpg": "35352cb5-19e6-53d7-a1e2-38014b1f29b7.jpg",
-  "39ca156f-0de5-4de5-a22a-4c9480227bf7/0905ad04-6355-5346-90ed-2fdb5233b10b.jpg": "0905ad04-6355-5346-90ed-2fdb5233b10b.jpg"
+  "39ca156f-0de5-4de5-a22a-4c9480227bf7/0905ad04-6355-5346-90ed-2fdb5233b10b.jpg": "0905ad04-6355-5346-90ed-2fdb5233b10b.jpg",
+  "c85f7e5b-0042-498b-bb94-4332d6d69173/ad1b2026-1113-4113-8113-000000000001.jpg": "lo-hicimos-juncos-01-piscina-dia.jpg",
+  "c85f7e5b-0042-498b-bb94-4332d6d69173/ad1b2026-1113-4113-8113-000000000002.jpg": "lo-hicimos-juncos-02-porton-entrada.jpg",
+  "c85f7e5b-0042-498b-bb94-4332d6d69173/ad1b2026-1113-4113-8113-000000000003.jpg": "lo-hicimos-juncos-03-gazebo.jpg",
+  "c85f7e5b-0042-498b-bb94-4332d6d69173/ad1b2026-1113-4113-8113-000000000004.jpg": "lo-hicimos-juncos-04-billar.jpg",
+  "c85f7e5b-0042-498b-bb94-4332d6d69173/ad1b2026-1113-4113-8113-000000000005.jpg": "lo-hicimos-juncos-05-piscina-noche.jpg",
+  "c85f7e5b-0042-498b-bb94-4332d6d69173/ad1b2026-1113-4113-8113-000000000006.jpg": "lo-hicimos-juncos-06-fachada.jpg",
+  "c85f7e5b-0042-498b-bb94-4332d6d69173/ad1b2026-1113-4113-8113-000000000007.jpg": "lo-hicimos-juncos-07-habitacion.jpg",
+  "c85f7e5b-0042-498b-bb94-4332d6d69173/ad1b2026-1113-4113-8113-000000000008.jpg": "lo-hicimos-juncos-08-oficina.jpg",
+  "c85f7e5b-0042-498b-bb94-4332d6d69173/ad1b2026-1113-4113-8113-000000000009.jpg": "lo-hicimos-juncos-09-salon-noche.jpg",
+  "c85f7e5b-0042-498b-bb94-4332d6d69173/ad1b2026-1113-4113-8113-000000000010.jpg": "lo-hicimos-juncos-10-salon-dia.jpg",
+  "c85f7e5b-0042-498b-bb94-4332d6d69173/ad1b2026-1113-4113-8113-000000000011.jpg": "lo-hicimos-juncos-11-cocina.jpg",
+  "c85f7e5b-0042-498b-bb94-4332d6d69173/ad1b2026-1113-4113-8113-000000000012.jpg": "lo-hicimos-juncos-12-comedor.jpg",
+  "c85f7e5b-0042-498b-bb94-4332d6d69173/ad1b2026-1113-4113-8113-000000000013.jpg": "lo-hicimos-juncos-13-sala-principal.jpg",
 };
