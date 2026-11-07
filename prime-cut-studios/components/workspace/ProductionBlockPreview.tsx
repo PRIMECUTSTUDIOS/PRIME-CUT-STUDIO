@@ -1,5 +1,6 @@
 import type {BookBlock} from '@/lib/project-book-db';
 import {DrivePhotoReference} from '@/components/workspace/DrivePhotoReference';
+import styles from './ProductionVisuals.module.css';
 const shell={margin:'14px 0',display:'grid',gap:12} as const;
 const card={border:'1px solid #5e5549',borderRadius:10,padding:14,minWidth:0} as const;
 const grid={display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,220px),1fr))',gap:12} as const;
@@ -7,14 +8,29 @@ const money=(n:number)=>n.toLocaleString('en-US',{style:'currency',currency:'USD
 export function ProductionBlockPreview({block,staff=false}:{block:BookBlock;staff?:boolean}){
  const m=block.metadata;
  if(!m?.tool)return null;
- if(m.tool==='storyboard')return <div style={grid} aria-label="Storyboard del proyecto">
-  {(m.frames||[]).map((f,i)=><article key={i} style={card}>
-   <p className="eyebrow">FRAME {String(i+1).padStart(2,'0')} · {f.scene||'Escena por definir'}</p>
-   {f.imageUrl?<DrivePhotoReference url={f.imageUrl} title={'Storyboard '+(f.shot||String(i+1))} height={195}/>:f.imageBlockId&&/^[a-f\d-]{36}$/i.test(f.imageBlockId)&&<img src={'/api/project-documents/'+f.imageBlockId} alt={'Storyboard '+(f.shot||String(i+1))} style={{width:'100%',height:185,objectFit:'contain',background:'#17191a',borderRadius:8}} loading="lazy"/>}
-   <h4>{f.shot||'Plano pendiente'}</h4>
-   <p style={{whiteSpace:'pre-wrap'}}>{f.description}</p>
-   {f.duration&&<p className="small muted">Duración: {f.duration} s</p>}
-   {f.notes&&<p className="small muted">Cámara y continuidad: {f.notes}</p>}
+ if(m.tool==='storyboard')return <div className={styles.boardGrid} aria-label="Storyboard del proyecto">
+  {(m.frames||[]).map((frame,i)=><article key={i} className={styles.boardCard}>
+   <div className={styles.boardMedia}>
+    {frame.imageBlockId&&/^[a-f\d-]{36}$/i.test(frame.imageBlockId)
+      ?<a href={'/api/project-documents/'+frame.imageBlockId} target="_blank" rel="noopener noreferrer" style={{display:'block',width:'100%',height:'100%'}}>
+        <img src={'/api/project-documents/'+frame.imageBlockId} alt={'Storyboard '+(frame.shot||String(i+1))} loading="lazy"/>
+       </a>
+      :frame.imageUrl
+       ?<DrivePhotoReference url={frame.imageUrl} title={'Storyboard '+(frame.shot||String(i+1))} variant="cover"/>
+       :<div className={styles.boardEmpty}>Referencia visual pendiente</div>}
+    <span className={styles.boardBadge}>FRAME {String(i+1).padStart(2,'0')}</span>
+    <span className={styles.boardScene}>{frame.scene||'Escena por definir'}</span>
+   </div>
+   <div className={styles.boardBody}>
+    <div className={styles.boardHeader}>
+     <h4>{frame.shot||'Plano '+(i+1)}</h4>
+     {frame.duration&&<span className={styles.boardDuration}>{frame.duration} segundos</span>}
+    </div>
+    <p className={styles.boardDescription}>{frame.description||'Descripción pendiente'}</p>
+    {frame.notes&&<details className={styles.boardEdit}><summary>Notas de cámara y continuidad</summary>
+      <p style={{fontSize:13,color:'#d3c7b7',whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{frame.notes}</p>
+     </details>}
+   </div>
   </article>)}
  </div>;
  if(m.tool==='shots')return <div style={grid} aria-label="Plan de tomas">
