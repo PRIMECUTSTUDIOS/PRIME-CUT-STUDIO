@@ -58,9 +58,16 @@ export function requestIsSameOrigin(request:Request){
       return PUBLIC_SITE_HOSTS.has(origin.host.toLowerCase())&&hosts.some(h=>TRUSTED_PROJECT_HOST.test(h));
     }catch{return false;}
   }
-  // Some browsers omit Origin for a top-level same-origin form submission.
-  // Accept only browser-asserted same-origin; never accept a missing Origin
-  // based solely on an untrusted Host or an absent fetch-metadata header.
+  // Some mobile privacy browsers send Referer but no Origin or Fetch Metadata.
+  // Only accept exact trusted site hosts, not arbitrary URLs or user-controlled hostnames.
+  const ref=request.headers.get('referer');
+  if(ref){
+    try{
+      const url=new URL(ref);
+      const host=url.host.toLowerCase();
+      if(url.protocol==='https:' && PUBLIC_SITE_HOSTS.has(host) && !url.username && !url.password && (!fetchSite || fetchSite==='same-origin' || fetchSite==='none'))return true;
+    }catch{}
+  }
   return fetchSite==='same-origin';
 }
 export function sameOriginRedirect(request:Request,path:string){
