@@ -1,7 +1,6 @@
 'use client';
 import {useMemo,useState} from 'react';
 import Link from 'next/link';
-import {randomUUID} from 'node:crypto';
 import type {BookBlock,BookResponse} from '@/lib/project-book-db';
 import {BookEditor} from '@/components/workspace/BookEditor';
 import {BookUpload} from '@/components/workspace/BookUpload';
@@ -33,7 +32,7 @@ const classify=(b:BookBlock):Group=>{
  return 'storyboard';
 };
 function sceneTime(b:BookBlock){const match=b.body.match(/\b\d{2}:\d{2}[–-]\d{2}:\d{2}\b/);return match?match[0]:'';}
-export function ProductionStudio({projectId,title,status,canEdit,canInvite,initialBlocks,initialResponses,flash}:{projectId:string,title:string,status:string,canEdit:boolean,canInvite:boolean,initialBlocks:BookBlock[],initialResponses:BookResponse[],flash:boolean}){
+export function ProductionStudio({projectId,title,status,canEdit,canInvite,initialBlocks,initialResponses,flash,newBlockId}:{projectId:string,title:string,status:string,canEdit:boolean,canInvite:boolean,initialBlocks:BookBlock[],initialResponses:BookResponse[],flash:boolean,newBlockId:string}){
  const [tab,setTab]=useState<Group>('shots');
  const [selected,setSelected]=useState(initialBlocks.find(b=>b.kind==='shot_list')?.id||initialBlocks[0]?.id||'');
  const [adding,setAdding]=useState(false);
@@ -88,7 +87,7 @@ export function ProductionStudio({projectId,title,status,canEdit,canInvite,initi
   {canEdit&&<button type="button" className="btn secondary btn-small" onClick={()=>setAdding(v=>!v)}>+ Añadir nueva sección</button>}
  </aside>
  <section className="panel" style={{minWidth:0,padding:'22px',gridColumn:'span 2'}}>
-  {adding&&canEdit?<><h2>Nueva ficha de producción</h2><BookEditor projectId={projectId} blockId={randomUUID()} returnTo="studio"/></>:block?<div>
+  {adding&&canEdit?<><h2>Nueva ficha de producción</h2><BookEditor projectId={projectId} blockId={newBlockId} returnTo="studio"/></>:block?<div>
    <div className="project-head"><div><div className="eyebrow">EDITAR EN LA WEB · {tab.toUpperCase()}</div><h2 style={{margin:'5px 0 10px'}}>{block.title}</h2></div><span className="pill">Versión {block.revision}</span></div>
    {canEdit?<BookEditor key={block.id+':'+block.revision} projectId={projectId} blockId={block.id} block={block} returnTo="studio"/>:<div className="book-content">{block.body}</div>}
    <hr style={{margin:'25px 0',border:'none',borderTop:'1px solid #4a4339'}}/>
