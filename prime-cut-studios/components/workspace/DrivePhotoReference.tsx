@@ -14,11 +14,14 @@ export function DrivePhotoReference({url,title,height=180,variant='standard'}:{
  url:string;title:string;height?:number;variant?:'standard'|'cover'
 }){
  const id=drivePhotoId(url);
+ // First-party photo assets are served by Prime Cut Studios; do not depend on Drive cookies.
+ const hosted=/^https:\/\/(?:www\.)?primecutstudiostx\.com\/production\/lo-hicimos\/[a-z0-9-]+\.jpg$/.test(url);
  const [unavailable,setUnavailable]=useState(false);
  useEffect(()=>setUnavailable(false),[url]);
- const photo=id&&!unavailable
-  ?<img src={'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1200'}
-    alt={title} loading="lazy" decoding="async" referrerPolicy="no-referrer"
+ const imageSrc=hosted?url:id?'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1200':null;
+ const photo=imageSrc&&!unavailable
+  ?<img src={imageSrc}
+    alt={title} loading="lazy" decoding="async" referrerPolicy={hosted?'strict-origin-when-cross-origin':'no-referrer'}
     onError={()=>setUnavailable(true)}/>
   :<div className={styles.photoFallback} role="img" aria-label={title}>Vista previa no disponible. Abre la fotografía original.</div>;
  if(variant==='cover')return <a href={url} target="_blank" rel="noopener noreferrer"
