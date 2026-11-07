@@ -5,6 +5,7 @@ import type {BookMetadata,ToolKind,StoryboardFrame,Shot,ShootRow,CrewRow,BudgetR
 import {WorkspaceForm} from '@/components/workspace/WorkspaceForm';
 import {BookUpload} from '@/components/workspace/BookUpload';
 import {DrivePhotoReference} from '@/components/workspace/DrivePhotoReference';
+import styles from './ProductionVisuals.module.css';
 
 type Props={projectId:string;blocks:BookBlock[];canEdit:boolean;newIds:Record<ToolKind,string>};
 const descriptions:Record<ToolKind,{label:string;kind:BookBlock['kind'];title:string;desc:string}>={
@@ -28,7 +29,6 @@ const emptyBudget=():BudgetRow=>({item:'',category:'',quantity:1,unitCost:0,paid
 const emptyReview=():ReviewNote=>({source:'',timecode:'',note:'',status:'Pendiente'});
 const emptyCall=():CallSheet=>({shootDate:'',crewCall:'',address:'',parking:'',emergency:'',weather:'',notes:''});
 const miniGrid={display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,170px),1fr))',gap:10} as const;
-const frameGrid={display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:12} as const;
 const status=['Pendiente','Confirmado','En progreso','Completado','Cancelado'];
 function Choice({label,value,options,change}:{label:string;value:string;options:string[];change:(v:string)=>void}){
  return <label>{label}<select value={value} onChange={e=>change(e.target.value)}>{options.map(v=><option key={v} value={v}>{v}</option>)}</select></label>;
@@ -64,6 +64,13 @@ function ToolkitEditor({tool,projectId,block,images,driveReferences,canEdit,newI
  const setBudget=(a:BudgetRow[])=>setData(v=>({...v,budgetRows:a}));
  const setReviews=(a:ReviewNote[])=>setData(v=>({...v,reviewNotes:a}));
  const updateFrame=(i:number,k:keyof StoryboardFrame,v:string)=>setFrames(frames.map((f,j)=>i===j?{...f,[k]:v}:f));
+ const chosenPhoto=(frame:StoryboardFrame)=>frame.imageBlockId&&images.some(image=>image.id===frame.imageBlockId)
+  ?'upload:'+frame.imageBlockId:frame.imageUrl?'drive:'+frame.imageUrl:'';
+ const choosePhoto=(i:number,choice:string)=>setFrames(frames.map((frame,j)=>j!==i?frame:{
+  ...frame,
+  imageUrl:choice.startsWith('drive:')?choice.slice(6):'',
+  imageBlockId:choice.startsWith('upload:')?choice.slice(7):''
+ }));
  const updateShot=(i:number,k:keyof Shot,v:string)=>setShots(shots.map((f,j)=>i===j?{...f,[k]:v}:f));
  const updateSchedule=(i:number,k:keyof ShootRow,v:string)=>setSchedule(shootRows.map((f,j)=>i===j?{...f,[k]:v}:f));
  const updateCrew=(i:number,k:keyof CrewRow,v:string)=>setCrew(crewRows.map((f,j)=>i===j?{...f,[k]:v}:f));
@@ -76,6 +83,13 @@ function ToolkitEditor({tool,projectId,block,images,driveReferences,canEdit,newI
  const lock=(!canEdit);
  const buttonAdd=(label:string,fn:()=>void,disabled:boolean)=><button type="button" className="btn secondary btn-small" onClick={fn} disabled={disabled||lock}>+ {label}</button>;
  const remove=(fn:()=>void)=><button type="button" className="btn secondary btn-small" disabled={lock} onClick={fn}>Eliminar fila</button>;
+ const metadataTooLong=JSON.stringify({...data,tool}).length>13500;
+ const generalControls=<>
+  {tool==='storyboard'&&input('Nombre de la sección',title,setTitle,{max:160})}
+  {area('Notas generales y decisiones de producción',body,setBody,20000)}
+  <label><input type="checkbox" checked={visible} onChange={e=>setVisible(e.target.checked)} name="visible" value="yes"/> Compartir con el cliente</label>
+  <label><input type="checkbox" checked={approval} onChange={e=>setApproval(e.target.checked)} name="approval" value="yes"/> Solicitar aprobación del cliente para esta versión</label>
+ </>;
  return <div>
   <h3>{config.label}</h3><p className="muted">{config.desc}</p>
   {blank&&<p className="small muted">Este módulo aún no tiene datos. Crea la primera versión para guardarlo en el proyecto.</p>}
@@ -87,28 +101,68 @@ function ToolkitEditor({tool,projectId,block,images,driveReferences,canEdit,newI
    <input type="hidden" name="revision" value={block?.revision||0}/>
    <input type="hidden" name="kind" value={config.kind}/>
    <input type="hidden" name="metadata" value={JSON.stringify({...data,tool})}/>
-   {input('Nombre de esta sección',title,setTitle,{max:160})}
+   {tool!=='storyboard'&&input('Nombre de esta sección',title,setTitle,{max:160})}
    <input type="hidden" name="title" value={title}/>
    {tool==='storyboard'&&<>
-    <p className="small muted">Storyboard secuencial. Los archivos pueden subirse abajo y vincularse a cada frame.</p>
-    <div style={frameGrid}>{frames.map((f,i)=><article key={i} className="panel" style={{padding:13,minWidth:0}}>
-     <p className="eyebrow">FRAME {i+1}</p>
-     <div style={{height:145,background:'#17191a',borderRadius:8,display:'grid',placeItems:'center',overflow:'hidden',marginBottom:12}}>
-      {f.imageUrl?<DrivePhotoReference url={f.imageUrl} title={'Storyboard '+(i+1)} height={130}/>:f.imageBlockId&&images.some(img=>img.id===f.imageBlockId)?<img alt={'Storyboard frame '+(i+1)} src={'/api/project-documents/'+f.imageBlockId} style={{width:'100%',height:'100%',objectFit:'contain'}}/>:<span className="small muted">Sin imagen asignada</span>}
-     </div>
-     <div style={miniGrid}>{input('Escena',f.scene,v=>updateFrame(i,'scene',v),{max:120})}{input('Plano',f.shot,v=>updateFrame(i,'shot',v),{max:120})}</div>
-     <label>Foto de scouting (Drive)<select value={f.imageUrl||''} onChange={e=>updateFrame(i,'imageUrl',e.target.value)}><option value="">Sin foto externa</option>{driveReferences.map(photo=><option key={photo.url} value={photo.url}>{photo.label}</option>)}</select></label>
-     <label>Imagen subida directamente al proyecto<select value={f.imageBlockId} onChange={e=>updateFrame(i,'imageBlockId',e.target.value)}><option value="">Sin archivo interno</option>{images.map(image=><option key={image.id} value={image.id}>{image.title}</option>)}</select></label>
-     {area('Descripción visual',f.description,v=>updateFrame(i,'description',v))}
-     {input('Duración estimada (segundos)',f.duration,v=>updateFrame(i,'duration',v),{max:30})}
-     {area('Cámara, acción y continuidad',f.notes,v=>updateFrame(i,'notes',v),400)}
-     <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-      {i>0&&<button type="button" className="btn secondary btn-small" onClick={()=>{const next=[...frames];[next[i-1],next[i]]=[next[i],next[i-1]];setFrames(next);}}>Subir</button>}
-      {i<frames.length-1&&<button type="button" className="btn secondary btn-small" onClick={()=>{const next=[...frames];[next[i],next[i+1]]=[next[i+1],next[i]];setFrames(next);}}>Bajar</button>}
-      {remove(()=>setFrames(frames.filter((_,j)=>j!==i)))}
-     </div>
-    </article>)}</div>
-    {buttonAdd('Frame al storyboard',()=>setFrames([...frames,emptyFrame()]),frames.length>=30)}
+    <div className={styles.boardTopline}>
+     <p>Imágenes y decisiones de cada toma. Abre <strong>Editar este frame</strong> solamente cuando necesites modificar algo.</p>
+     <span className={styles.boardCount}>{frames.length} frames · storyboard</span>
+     <button type="submit" className={styles.boardSave} disabled={lock||!title.trim()||metadataTooLong}>Guardar storyboard</button>
+    </div>
+    <div className={styles.boardGrid}>
+     {frames.map((frame,i)=><article key={i} className={styles.boardCard}>
+      <div className={styles.boardMedia}>
+       {frame.imageBlockId&&images.some(img=>img.id===frame.imageBlockId)
+        ?<a href={'/api/project-documents/'+frame.imageBlockId} target="_blank" rel="noopener noreferrer" style={{display:'block',width:'100%',height:'100%'}} aria-label={'Abrir foto del frame '+(i+1)}>
+          <img src={'/api/project-documents/'+frame.imageBlockId} alt={'Referencia visual de '+(frame.shot||'plano '+(i+1))} loading="lazy"/>
+         </a>
+        :frame.imageUrl
+         ?<DrivePhotoReference url={frame.imageUrl} title={'Referencia visual '+(frame.shot||'frame '+(i+1))} variant="cover"/>
+         :<div className={styles.boardEmpty}>Sin referencia visual<br/>Selecciona una foto en Editar este frame</div>}
+       <span className={styles.boardBadge}>FRAME {String(i+1).padStart(2,'0')}</span>
+       <span className={styles.boardScene}>{frame.scene||'Escena por definir'}</span>
+      </div>
+      <div className={styles.boardBody}>
+       <div className={styles.boardHeader}>
+        <h4>{frame.shot||'Plano '+(i+1)}</h4>
+        {frame.duration&&<span className={styles.boardDuration}>{frame.duration} segundos</span>}
+       </div>
+       <p className={styles.boardDescription}>{frame.description||'Descripción visual por completar'}</p>
+       <details className={styles.boardEdit}>
+        <summary>Editar este frame</summary>
+        <div className={styles.boardEditorContent}>
+         <label>Referencia visual
+          <select aria-label={'Referencia visual del frame '+(i+1)} value={chosenPhoto(frame)} onChange={e=>choosePhoto(i,e.target.value)}>
+           <option value="">Sin fotografía</option>
+           {driveReferences.length>0&&<optgroup label="Scouting del Airbnb">
+            {driveReferences.map(photo=><option key={photo.url} value={'drive:'+photo.url}>{photo.label}</option>)}
+           </optgroup>}
+           {images.length>0&&<optgroup label="Fotos subidas al proyecto">
+            {images.map(photo=><option key={photo.id} value={'upload:'+photo.id}>{photo.title}</option>)}
+           </optgroup>}
+          </select>
+         </label>
+         <div className={styles.boardEditorColumns}>
+          {input('Escena',frame.scene,v=>updateFrame(i,'scene',v),{max:120})}
+          {input('Plano',frame.shot,v=>updateFrame(i,'shot',v),{max:120})}
+         </div>
+         {area('Descripción visual',frame.description,v=>updateFrame(i,'description',v))}
+         {input('Duración estimada (segundos)',frame.duration,v=>updateFrame(i,'duration',v),{max:30})}
+         {area('Cámara, acción y continuidad',frame.notes,v=>updateFrame(i,'notes',v),400)}
+         <div className={styles.boardActions}>
+          {i>0&&<button type="button" className="btn secondary btn-small" disabled={lock} onClick={()=>{const next=[...frames];[next[i-1],next[i]]=[next[i],next[i-1]];setFrames(next);}}>Mover antes</button>}
+          {i<frames.length-1&&<button type="button" className="btn secondary btn-small" disabled={lock} onClick={()=>{const next=[...frames];[next[i],next[i+1]]=[next[i+1],next[i]];setFrames(next);}}>Mover después</button>}
+          {remove(()=>setFrames(frames.filter((_,j)=>j!==i)))}
+         </div>
+        </div>
+       </details>
+      </div>
+     </article>)}
+    </div>
+    <div className={styles.boardFooter}>
+     {buttonAdd('Agregar frame',()=>setFrames([...frames,emptyFrame()]),frames.length>=30)}
+     <p className="small muted">Las ediciones se guardan al pulsar Guardar storyboard. El historial de versiones se conserva.</p>
+    </div>
    </>}
    {tool==='shots'&&<>
     <p className="small muted">{shots.length} planos planificados. Prioriza y confirma los planos antes del rodaje.</p>
@@ -201,13 +255,13 @@ function ToolkitEditor({tool,projectId,block,images,driveReferences,canEdit,newI
     </article>)}
     {buttonAdd('Comentario con timecode',()=>setReviews([...reviews,emptyReview()]),reviews.length>=60)}
    </>}
-   {area('Notas generales y decisiones de producción',body,setBody,20000)}
+   {tool==='storyboard'
+     ?<details className={styles.boardSettings}><summary>Opciones del storyboard, título y notas generales</summary><div>{generalControls}</div></details>
+     :generalControls}
    <input type="hidden" name="body" value={body}/>
-   <label><input type="checkbox" checked={visible} onChange={e=>setVisible(e.target.checked)} name="visible" value="yes"/> Compartir con el cliente</label>
-   <label><input type="checkbox" checked={approval} onChange={e=>setApproval(e.target.checked)} name="approval" value="yes"/> Solicitar aprobación del cliente para esta versión</label>
    <p className="small muted">Guardado versionado. Si otra persona modifica esta sección primero, se te avisará para evitar sobreescribir su trabajo. No se guarda automáticamente: pulsa el botón para confirmar los cambios.</p>
-   <button type="submit" className="btn" disabled={!canEdit||!title.trim()||JSON.stringify({...data,tool}).length>13500}>{block?'Guardar nueva versión':'Crear y guardar sección'}</button>
-   {JSON.stringify({...data,tool}).length>13500&&<p role="alert" className="note">La ficha es demasiado grande; divídela en varias secciones para guardarla.</p>}
+   <button type="submit" className="btn" disabled={!canEdit||!title.trim()||metadataTooLong}>{block?'Guardar nueva versión':'Crear y guardar sección'}</button>
+   {metadataTooLong&&<p role="alert" className="note">La ficha es demasiado grande; divídela en varias secciones para guardarla.</p>}
   </WorkspaceForm>
   </fieldset>
   {tool==='storyboard'&&canEdit&&<div style={{marginTop:16}}>
