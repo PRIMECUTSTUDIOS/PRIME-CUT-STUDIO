@@ -4,7 +4,7 @@ export const bookKinds=['brief','location','cast','script','palette','shot_list'
 export type BookKind=(typeof bookKinds)[number];
 export const bookLabels:Record<BookKind,string>={brief:'Resumen y concepto',location:'Locaciones',cast:'Actores y personajes',script:'Libreto',palette:'Paleta de colores',shot_list:'Plan de tomas',schedule:'Itinerario',deliverables:'Entregables',document:'Documento',reference:'Referencias / moodboard',custom:'Otros detalles'};
 export type Shot={scene:string;framing:string;action:string;movement:string;notes:string;lens?:string;fps?:string;duration?:string;location?:string;status?:string;priority?:string};
-export type StoryboardFrame={scene:string;shot:string;description:string;imageBlockId:string;duration:string;notes:string};
+export type StoryboardFrame={scene:string;shot:string;description:string;imageBlockId:string;duration:string;notes:string;imageUrl?:string};
 export type ShootRow={scene:string;start:string;end:string;location:string;task:string;crew:string;status:string};
 export type CrewRow={name:string;role:string;contact:string;callTime:string;notes:string};
 export type BudgetRow={item:string;category:string;quantity:number;unitCost:number;paid:boolean;notes:string};
@@ -34,7 +34,7 @@ export function validateBookMetadata(raw:string):BookMetadata|null{
  if(!rowsValid(parsed.shots,60,{scene:1000,framing:1000,action:1000,movement:1000,notes:1000}))return null;
  if(Array.isArray(parsed.shots)&&parsed.shots.some((s:Shot)=>!['lens','fps','duration','location','status','priority'].every(k=>optional(s[k as keyof Shot],120))))return null;
  if(!rowsValid(parsed.frames,30,{scene:120,shot:120,description:600,imageBlockId:50,duration:30,notes:400}))return null;
- if(Array.isArray(parsed.frames)&&parsed.frames.some((f:StoryboardFrame)=>f.imageBlockId!==''&&!/^[a-f\d-]{36}$/i.test(f.imageBlockId)))return null;
+ if(Array.isArray(parsed.frames)&&parsed.frames.some((f:StoryboardFrame)=>(f.imageBlockId!==''&&!/^[a-f\d-]{36}$/i.test(f.imageBlockId))||(f.imageUrl!==undefined&&(!stringField(f.imageUrl,1000)||!safeProfessionalUrl(f.imageUrl)))))return null;
  if(!rowsValid(parsed.shootRows,50,{scene:120,start:30,end:30,location:160,task:400,crew:200,status:40}))return null;
  if(!rowsValid(parsed.crewRows,60,{name:120,role:120,contact:160,callTime:40,notes:400}))return null;
  if(parsed.budgetRows!==undefined&&(!Array.isArray(parsed.budgetRows)||parsed.budgetRows.length>60||parsed.budgetRows.some((b:BudgetRow)=>!stringField(b.item,160)||!stringField(b.category,100)||!stringField(b.notes,300)||typeof b.quantity!=='number'||!Number.isFinite(b.quantity)||b.quantity<0||b.quantity>100000||typeof b.unitCost!=='number'||!Number.isFinite(b.unitCost)||b.unitCost<0||b.unitCost>10000000||typeof b.paid!=='boolean')))return null;
@@ -46,7 +46,7 @@ export function validateBookMetadata(raw:string):BookMetadata|null{
   colors:parsed.colors.map((c:{name:string;hex:string})=>({name:c.name,hex:c.hex})),
   links:parsed.links.map((l:{label:string;url:string})=>({label:l.label,url:l.url})),
   tool:parsed.tool,
-  frames:cleanRows<StoryboardFrame>(parsed.frames,['scene','shot','description','imageBlockId','duration','notes']),
+  frames:cleanRows<StoryboardFrame>(parsed.frames,['scene','shot','description','imageBlockId','duration','notes','imageUrl']),
   shootRows:cleanRows<ShootRow>(parsed.shootRows,['scene','start','end','location','task','crew','status']),
   crewRows:cleanRows<CrewRow>(parsed.crewRows,['name','role','contact','callTime','notes']),
   budgetRows:Array.isArray(parsed.budgetRows)?parsed.budgetRows.map((b:BudgetRow)=>({item:b.item,category:b.category,quantity:b.quantity,unitCost:b.unitCost,paid:b.paid,notes:b.notes})):undefined,

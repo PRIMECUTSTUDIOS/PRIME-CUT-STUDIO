@@ -4,6 +4,7 @@ import type {BookBlock} from '@/lib/project-book-db';
 import type {BookMetadata,ToolKind,StoryboardFrame,Shot,ShootRow,CrewRow,BudgetRow,ReviewNote,CallSheet} from '@/lib/project-book-policy';
 import {WorkspaceForm} from '@/components/workspace/WorkspaceForm';
 import {BookUpload} from '@/components/workspace/BookUpload';
+import {DrivePhotoReference} from '@/components/workspace/DrivePhotoReference';
 
 type Props={projectId:string;blocks:BookBlock[];canEdit:boolean;newIds:Record<ToolKind,string>};
 const descriptions:Record<ToolKind,{label:string;kind:BookBlock['kind'];title:string;desc:string}>={
@@ -36,6 +37,7 @@ export function ProductionToolkit({projectId,blocks,canEdit,newIds}:Props){
  const [active,setActive]=useState<ToolKind>('storyboard');
  const saved=blocks.find(b=>b.metadata?.tool===active)||null;
  const images=blocks.filter(b=>b.storage_path&&b.file_mime?.startsWith('image/'));
+ const driveReferences=blocks.filter(b=>b.kind==='reference'&&b.title.startsWith('Fotos scouting Airbnb Juncos')).flatMap(b=>b.metadata?.links||[]);
  return <section className="panel" style={{padding:22,margin:'20px 0',borderColor:'#906d3e'}} aria-label="Herramientas avanzadas de producción">
   <div className="eyebrow" style={{color:'#efc48e'}}>PRODUCTION SUITE · DENTRO DE PRIME CUT STUDIOS</div>
   <h2 style={{margin:'8px 0'}}>Herramientas de producción online</h2>
@@ -43,10 +45,10 @@ export function ProductionToolkit({projectId,blocks,canEdit,newIds}:Props){
   <nav aria-label="Módulos de producción" style={{display:'flex',flexWrap:'wrap',gap:7,margin:'16px 0 18px'}}>
    {keys.map(k=><button key={k} type="button" className={'btn '+(active===k?'':'secondary')} aria-pressed={active===k} onClick={()=>setActive(k)} style={{fontSize:12,padding:'9px 11px'}}>{descriptions[k].label}{blocks.some(b=>b.metadata?.tool===k)?' · guardado':''}</button>)}
   </nav>
-  <ToolkitEditor key={active+':'+(saved?.id||'new')+':'+(saved?.revision||0)} tool={active} projectId={projectId} block={saved} images={images} canEdit={canEdit} newId={newIds[active]}/>
+  <ToolkitEditor key={active+':'+(saved?.id||'new')+':'+(saved?.revision||0)} tool={active} projectId={projectId} block={saved} images={images} driveReferences={driveReferences} canEdit={canEdit} newId={newIds[active]}/>
  </section>;
 }
-function ToolkitEditor({tool,projectId,block,images,canEdit,newId}:{tool:ToolKind;projectId:string;block:BookBlock|null;images:BookBlock[];canEdit:boolean;newId:string}){
+function ToolkitEditor({tool,projectId,block,images,driveReferences,canEdit,newId}:{tool:ToolKind;projectId:string;block:BookBlock|null;images:BookBlock[];driveReferences:{label:string;url:string}[];canEdit:boolean;newId:string}){
  const config=descriptions[tool];
  const [title,setTitle]=useState(block?.title||config.title);
  const [body,setBody]=useState(block?.body||'');
@@ -92,10 +94,11 @@ function ToolkitEditor({tool,projectId,block,images,canEdit,newId}:{tool:ToolKin
     <div style={frameGrid}>{frames.map((f,i)=><article key={i} className="panel" style={{padding:13,minWidth:0}}>
      <p className="eyebrow">FRAME {i+1}</p>
      <div style={{height:145,background:'#17191a',borderRadius:8,display:'grid',placeItems:'center',overflow:'hidden',marginBottom:12}}>
-      {f.imageBlockId&&images.some(img=>img.id===f.imageBlockId)?<img alt={'Storyboard frame '+(i+1)} src={'/api/project-documents/'+f.imageBlockId} style={{width:'100%',height:'100%',objectFit:'contain'}}/>:<span className="small muted">Sin imagen asignada</span>}
+      {f.imageUrl?<DrivePhotoReference url={f.imageUrl} title={'Storyboard '+(i+1)} height={130}/>:f.imageBlockId&&images.some(img=>img.id===f.imageBlockId)?<img alt={'Storyboard frame '+(i+1)} src={'/api/project-documents/'+f.imageBlockId} style={{width:'100%',height:'100%',objectFit:'contain'}}/>:<span className="small muted">Sin imagen asignada</span>}
      </div>
      <div style={miniGrid}>{input('Escena',f.scene,v=>updateFrame(i,'scene',v),{max:120})}{input('Plano',f.shot,v=>updateFrame(i,'shot',v),{max:120})}</div>
-     <label>Imagen del proyecto<select value={f.imageBlockId} onChange={e=>updateFrame(i,'imageBlockId',e.target.value)}><option value="">Seleccionar imagen</option>{images.map(image=><option key={image.id} value={image.id}>{image.title}</option>)}</select></label>
+     <label>Foto de scouting (Drive)<select value={f.imageUrl||''} onChange={e=>updateFrame(i,'imageUrl',e.target.value)}><option value="">Sin foto externa</option>{driveReferences.map(photo=><option key={photo.url} value={photo.url}>{photo.label}</option>)}</select></label>
+     <label>Imagen subida directamente al proyecto<select value={f.imageBlockId} onChange={e=>updateFrame(i,'imageBlockId',e.target.value)}><option value="">Sin archivo interno</option>{images.map(image=><option key={image.id} value={image.id}>{image.title}</option>)}</select></label>
      {area('Descripción visual',f.description,v=>updateFrame(i,'description',v))}
      {input('Duración estimada (segundos)',f.duration,v=>updateFrame(i,'duration',v),{max:30})}
      {area('Cámara, acción y continuidad',f.notes,v=>updateFrame(i,'notes',v),400)}
