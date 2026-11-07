@@ -26,5 +26,5 @@ export async function POST(req:Request){
  try{await attachBookFile(projectId,title,description,objectPath,filename,mime,form.get('visible')==='yes',form.get('placement')==='reference'?'reference':'document');}catch{await deleteBookFile(objectPath);return new Response('Could not attach file; upload removed',{status:503});}
  scheduleMail();
  await audit('project_book.upload','document',null,actor,projectId);
- return NextResponse.redirect(sameOriginRedirect(req,'/team/projects/'+projectId+'?saved=1#production-book'),303);
+ return NextResponse.redirect(sameOriginRedirect(req,new URL(req.url).searchParams.get('returnTo')==='studio'?'/team/projects/'+projectId+'/studio?uploaded=1':'/team/projects/'+projectId+'?saved=1#production-book'),303);
 }
