@@ -1,5 +1,5 @@
 import {NextResponse} from 'next/server';
-import {adminAuthenticated,requestIsSameOrigin,sameOriginRedirect} from '@/lib/auth';
+import {adminAuthenticated,sameOriginRedirect} from '@/lib/auth';
 import {boundedForm} from '@/lib/form-request';
 import {changeCleanupRecord,type CleanupAction,type CleanupTarget} from '@/lib/admin-cleanup-db';
 import {audit,operationsSession} from '@/lib/operations-db';
@@ -8,7 +8,8 @@ export const runtime='nodejs';
 const targets=new Set<CleanupTarget>(['inquiry','project']);
 const actions=new Set<CleanupAction>(['spam','not-spam','trash','restore','archive','delete-forever']);
 export async function POST(request:Request){
- if(!requestIsSameOrigin(request))return new Response('Invalid origin',{status:403});
+ const fetchSite=request.headers.get('sec-fetch-site');
+ if(fetchSite==='cross-site')return new Response('Cross-site request blocked',{status:403});
  if(!await adminAuthenticated())return new Response('Unauthorized',{status:401});
  const form=await boundedForm(request);if(form instanceof Response)return form;
  const type=String(form.get('target')||'') as CleanupTarget;
