@@ -21,7 +21,7 @@ const tools:ToolKind[]=['storyboard','shots','schedule','call_sheet','crew','bud
 const stringField=(v:unknown,n:number)=>typeof v==='string'&&v.length<=n;
 const optional=(v:unknown,n:number)=>v===undefined||stringField(v,n);
 const rowsValid=(rows:unknown,limit:number,spec:Record<string,number>)=>rows===undefined||(Array.isArray(rows)&&rows.length<=limit&&rows.every((r:unknown)=>r!==null&&typeof r==='object'&&Object.entries(spec).every(([k,n])=>stringField((r as Record<string,unknown>)[k],n))));
-const cleanRows=<T>(rows:unknown,fields:(keyof T)[]):T[]|undefined=>Array.isArray(rows)?rows.map((row:Record<string,unknown>)=>Object.fromEntries(fields.map(k=>[k,row[k]])) as T):undefined;
+const cleanRows=<T>(rows:unknown,fields:(keyof T)[]):T[]|undefined=>Array.isArray(rows)?rows.map((row:Record<string,unknown>)=>Object.fromEntries(fields.map(k=>[k,row[String(k)]])) as T):undefined;
 export function validateBookMetadata(raw:string):BookMetadata|null{
  try{
  if(new TextEncoder().encode(raw).byteLength>14000)return null;
