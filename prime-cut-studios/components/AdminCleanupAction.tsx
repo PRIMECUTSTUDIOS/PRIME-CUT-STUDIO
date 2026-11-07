@@ -6,7 +6,7 @@ export function AdminCleanupAction({
  id:string;target:'inquiry'|'project';action:'spam'|'not-spam'|'trash'|'restore'|'archive'|'delete-forever';label:string;name:string
 }){
  const destructive=action==='trash'||action==='delete-forever';
- const phrase=action==='delete-forever'?'DELETE':'YES';
+ const phrase='YES';
  const confirmAction=(event:React.FormEvent<HTMLFormElement>)=>{
   if(action==='delete-forever'){
    const answer=window.prompt('BORRADO DEFINITIVO de la solicitud de '+name+'. No se podrá recuperar. Escribe DELETE para confirmar:');
