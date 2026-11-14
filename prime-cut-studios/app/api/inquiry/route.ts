@@ -10,6 +10,16 @@ import {findPricingCategory,pricingAddOns} from '@/lib/pricing';
 import {dateOnly} from '@/lib/workspace-policy';
 import {requestIsSameOrigin,safeIp,sameOriginRedirect} from '@/lib/auth';
 export const runtime='nodejs';
+function unsolicitedOffer(email:string,details:string){
+  const text=details.normalize('NFKC').toLowerCase().replace(/\s+/g,' ');
+  if(email==='mvmarcovillarreal49@gmail.com')return true;
+  const website=/\b(?:your (?:web\s*site|site|web ?page)|su (?:sitio|p[aá]gina) web|tu (?:sitio|p[aá]gina) web|primecutstudiostx\.com)\b/i.test(text);
+  const offer=/\b(?:website audit|seo audit|audit report|seo services|web design services|website redesign|search engine optimization|backlinks|design.related issues|website errors|website performance|auditor[ií]a|posicionamiento|errores de dise[nñ]o|optimizaci[oó]n seo)\b/i.test(text);
+  const pitch=/\b(?:i noticed|we noticed|would you like|i can (?:send|prepare|help|improve)|we can (?:send|prepare|help|improve)|i (?:offer|provide)|we (?:offer|provide)|our services|proposal and pricing|me gustar[ií]a ofrecer|podemos (?:ayudar|enviar|preparar|mejorar)|he notado|hemos notado|ofrecemos|te ofrezco|le ofrezco)\b/i.test(text);
+  const generic=/\b(?:guest post(?:ing)?|link building|backlinks|lead generation|buy followers|sell followers|buy traffic)\b/i.test(text);
+  const explicitSale=/\b(?:i (?:offer|provide)|we (?:offer|provide)|our services|me gustar[ií]a ofrecer|ofrecemos|te ofrezco|le ofrezco)\b/i.test(text);
+  return (website&&offer&&pitch)||(generic&&explicitSale);
+}
 export async function POST(request:Request){
   let language:'en'|'es'='en';
   if(!requestIsSameOrigin(request)) return new Response('Invalid request origin',{status:403});
@@ -20,6 +30,8 @@ export async function POST(request:Request){
     const val=(name:string,max:number)=>String(form.get(name)||'').trim().slice(0,max+1);
     const name=val('name',120),email=val('email',254).toLowerCase(),phone=val('phone',40),service=val('service',100),date=val('date',10),location=val('location',150),originalDetails=val('details',2000);
     const quoteMode=val('quote_mode',16)||'package',packageId=val('package',100),budgetRange=val('budget_range',50)||val('budget',50),amountText=val('budget_amount',20);language=val('language',5)==='es'?'es':'en';
+    // Suppress unsolicited commercial pitches before storage or notification.
+    if(unsolicitedOffer(email,originalDetails))return NextResponse.redirect(sameOriginRedirect(request,'/book?lang='+language+'&sent=1'),303);
     const requestId=val('request_id',36)||randomUUID();
     const category=(await getPricingCatalog()).find(c=>c.name===service||c.slug===service);
     const selectedPackage=category?.packages.find(p=>p.id===packageId);
